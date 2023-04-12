@@ -10,19 +10,18 @@ export class IssueWidget extends WidgetType {
 
     toDOM(view: EditorView): HTMLElement {
         const span = document.createElement("span");
-        const a = document.createElement("a");
-        a.href = "https://example.com"; // TODO read from settings
-        a.textContent = this.issueId;
 
-        const textSpan = document.createElement("span");
-        textSpan.style = "color: red"; // TODO read from settings
-        const text = document.createTextNode(` ${this.issueTitle}`);
-        textSpan.appendChild(text);
-        // textSpan.classList.add("issue-title"); // TODO use CSS class
-        textSpan.style.color = "gray";
+        if (this.issueTitle) {
+            const whitespace = document.createTextNode(" ");
 
-        span.appendChild(a);
-        span.appendChild(textSpan);
+            const a = document.createElement("a");
+            a.href = "https://example.com"; // TODO read from settings
+            a.textContent = this.issueTitle;
+            a.style.color = "gray"; // TODO read from settings
+            // a.classList.add("issue-title"); // TODO use CSS class
+            span.appendChild(whitespace);
+            span.appendChild(a);
+        }
 
         return span;
     }

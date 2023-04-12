@@ -70,10 +70,10 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
             issue.title = issues[issue.id]; // TODO
 
             return Decoration
-                .replace({
+                .widget({
                     widget: new IssueWidget(issue)
                 })
-                .range(issue.start + lineStart, issue.end + lineStart);
+                .range(issue.end + lineStart);
         }));
 
         allWidgets.push(...offsetWidgets);
