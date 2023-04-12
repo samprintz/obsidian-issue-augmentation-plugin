@@ -15,7 +15,7 @@ export class IssueWidget extends WidgetType {
             const whitespace = document.createTextNode(" ");
 
             const a = document.createElement("a");
-            a.href = "https://example.com"; // TODO read from settings
+            a.href = this.issueUrl;
             a.textContent = this.issueTitle;
             a.style.color = "gray"; // TODO read from settings
             // a.classList.add("issue-title"); // TODO use CSS class

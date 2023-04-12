@@ -2,14 +2,6 @@ import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@
 import { IssueWidget } from 'issue-widget'
 
 
-const issues = { // TODO replace with issueIdToTitleMap
-    "#1646": "Restore butten",
-    "#1878": "CSV import",
-    "#1880": "Bugfix",
-    "#1824": "Refactor status bar"
-};
-
-
 export interface DecorationSpec {
     id: string,
     url: string,
@@ -41,12 +33,12 @@ function getDecosOnLine(view: EditorView, lineNumber: number) {
     const line = view.state.doc.line(lineNumber);
     const docText = view.state.sliceDoc(line.from, line.to);
 
-    const regex = /#\d{3,4}/g;
+    const regex = /#(\d{3,4})/g;
 
     const matches = [...docText.matchAll(regex)];
 
     for (const match of matches) {
-        const issueId = match[0];
+        const issueId = match[1];
         const start = match.index;
         const end = match.index + match[0].length;
 
@@ -60,14 +52,16 @@ function getDecosOnLine(view: EditorView, lineNumber: number) {
 function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineNumber: number]: DecorationSpec[]}) {
     const allWidgets = [];
 
+    // TODO better way to access settings/plugin properties
+    const plugin = window.app.plugins.plugins['obsidian-issue-augmentation'];
+
     for (const lineNumber of Object.keys(decorationsByLine)) {
         const widgets = decorationsByLine[lineNumber];
-            const lineStart = view.state.doc.line(lineNumber).from;
-
+        const lineStart = view.state.doc.line(lineNumber).from;
 
         const offsetWidgets = widgets.map((issue => {
-            issue.url = issues[issue.id]; // TODO
-            issue.title = issues[issue.id]; // TODO
+            issue.url = plugin.settings.urlPrefix + issue.id;
+            issue.title = plugin.issueIdToTitleMap[issue.id];
 
             return Decoration
                 .widget({
