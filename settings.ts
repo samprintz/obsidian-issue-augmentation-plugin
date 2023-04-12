@@ -12,7 +12,7 @@ export interface IssueAugmentationPluginSettings {
 export const DEFAULT_SETTINGS: IssueAugmentationPluginSettings = {
 	issueFilePath: "",
 	urlPrefix: "https://github.com/",
-	titleColor: "#444444",
+	titleColor: "#888",
 	// githubToken: "",
 }
 
@@ -60,7 +60,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.titleColor = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadEditorExtensions();
+					this.plugin.reloadStyle();
 				})
 			);
 	}

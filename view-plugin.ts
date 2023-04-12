@@ -1,4 +1,4 @@
-import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from "@codemirror/view";
+import { EditorView, ViewUpdate, Decoration, DecorationSet, ViewPlugin } from '@codemirror/view';
 import { IssueWidget } from 'issue-widget'
 
 

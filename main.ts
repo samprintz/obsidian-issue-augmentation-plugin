@@ -16,6 +16,9 @@ export default class IssueAugmentationPlugin extends Plugin {
 
 		this.extensions = [IssueAugmentationViewPlugin.extension];
 		this.registerEditorExtension(this.extensions);
+
+		this.styleEl = document.head.createEl("style");
+		this.reloadStyle();
 	}
 
 	onunload() {
@@ -50,6 +53,14 @@ export default class IssueAugmentationPlugin extends Plugin {
 
 		this.issueIdToTitleMap = map;
 		console.log('CSV file successfully processed');
+	}
+
+	reloadStyle() {
+		this.styleEl.textContent = this.buildStyleFromSettings(this.settings);
+	}
+
+	buildStyleFromSettings(settings: NLSyntaxHighlightPluginSettings) {
+		return `.issue-title { color: ${settings.titleColor} }`;
 	}
 
 	reloadEditorExtensions() {
