@@ -5,15 +5,19 @@ import IssueAugmentationPlugin from 'main';
 export interface IssueAugmentationPluginSettings {
 	issueFilePath: string,
 	urlPrefix: string,
+	repoOwner: string,
+	repoName: string,
+	githubToken: string, // TODO store encrypted
 	titleColor: string,
-	// githubToken: string // TODO
 }
 
 export const DEFAULT_SETTINGS: IssueAugmentationPluginSettings = {
 	issueFilePath: "",
 	urlPrefix: "https://github.com/",
+	repoOwner: "",
+	repoName: "",
+	githubToken: "",
 	titleColor: "#888",
-	// githubToken: "",
 }
 
 
@@ -49,6 +53,40 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 					this.plugin.settings.urlPrefix = value;
 					await this.plugin.saveSettings();
 					this.plugin.reloadEditorExtensions();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('GitHub repository owner')
+			.addText(text => text
+				.setValue(this.plugin.settings.repoOwner)
+				.onChange(async (value) => {
+					this.plugin.settings.repoOwner = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadIssueIdToTitleMap();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('GitHub repository name')
+			.addText(text => text
+				.setValue(this.plugin.settings.repoName)
+				.onChange(async (value) => {
+					this.plugin.settings.repoName = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadIssueIdToTitleMap();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('GitHub token')
+			.setDesc('GitHub token for retrieving issue titles')
+			.addText(text => text
+				.setValue(this.plugin.settings.githubToken)
+				.onChange(async (value) => {
+					this.plugin.settings.githubToken = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadIssueIdToTitleMap();
 				})
 			);
 

@@ -3,6 +3,7 @@ import { IssueAugmentationViewPlugin } from 'view-plugin';
 import { IssueAugmentationPluginSettings, DEFAULT_SETTINGS, IssueAugmentationPluginSettingTab } from 'settings';
 import { Extension } from '@codemirror/state';
 import fs from 'fs';
+import { Octokit } from '@octokit/rest';
 
 export default class IssueAugmentationPlugin extends Plugin {
 	settings: IssueAugmentationPluginSettings;
@@ -12,7 +13,8 @@ export default class IssueAugmentationPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new IssueAugmentationPluginSettingTab(this.app, this));
 
-		await this.loadIssueIdToTitleMap();
+		this.octokit = new Octokit({ auth: this.settings.githubToken });
+		await this.reloadIssueIdToTitleMap();
 
 		this.extensions = [IssueAugmentationViewPlugin.extension];
 		this.registerEditorExtension(this.extensions);
@@ -32,15 +34,64 @@ export default class IssueAugmentationPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	async loadIssueIdToTitleMap() {
-		const map: {[id: string]: string} = {};
+	async reloadIssueIdToTitleMap() {
+		this.issueIdToTitleMap = await this.getIssueIdToTitleMap();
+	}
 
-		// 1. Get issue titles from GitHub
-		// TODO implement GitHub API
+	async getIssueIdToTitleMap() {
+		let map: {[id: string]: string} = {};
 
-		// 2. Get issue titles from file
+		const githubIssueMap = await this.getGitHubIssueTitles(this.settings.repoOwner,
+			this.settings.repoName);
+		map = Object.assign(map, githubIssueMap);
+
 		const path = app.vault.adapter.getBasePath() + "/" + this.settings.issueFilePath;
-		console.log(`Read issue map from ${path}`);
+		const fileIssueMap = await this.getFileIssueTitles(path);
+		map = Object.assign(map, fileIssueMap);
+
+		return map;
+	}
+
+	async getGitHubIssueTitles(owner: string, repo: string) {
+		const map = {};
+
+		console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
+
+		if (owner?.length && repo?.length) {
+			const nrOfIssues = 3000; // TODO assuming 3.000 issues to fetch
+			const issuesPerPage = 100;
+			const nrPages = nrOfIssues / issuesPerPage;
+
+			for (let pageNr = 1; pageNr < nrPages; pageNr++) {
+				const response = await this.octokit.issues.listForRepo({
+					owner: owner,
+					repo: repo,
+					filter: "all",
+					state: "all",
+					per_page: issuesPerPage,
+					page: pageNr,
+				});
+
+				const issues = response.data;
+
+				issues.forEach((issue) => {
+					map[issue.number] = issue.title;
+				});
+			}
+
+			console.log("Issues fetched from GitHub");
+		} else {
+			// TODO Obsidian notification
+			console.log(`Please specify owner and name of the GitHub repository`);
+		}
+
+		return map;
+	}
+
+	async getFileIssueTitles(path: string) {
+		const map = {};
+
+		console.log(`Read issue titles from ${path}`);
 
 		const data = await fs.promises.readFile(path, 'utf-8');
 
@@ -51,8 +102,9 @@ export default class IssueAugmentationPlugin extends Plugin {
 			map[id] = text;
 		});
 
-		this.issueIdToTitleMap = map;
-		console.log('CSV file successfully processed');
+		console.log('CSV file processed');
+
+		return map;
 	}
 
 	reloadStyle() {
