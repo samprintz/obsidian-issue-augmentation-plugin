@@ -2,7 +2,7 @@ import { Plugin } from 'obsidian';
 import { IssueAugmentationViewPlugin } from 'view-plugin';
 import { IssueAugmentationPluginSettings, DEFAULT_SETTINGS, IssueAugmentationPluginSettingTab } from 'settings';
 import { Extension } from '@codemirror/state';
-import fs from 'fs';
+import fs from 'fs'; // TODO reason for isDesktopOnly
 import { Octokit } from '@octokit/rest';
 
 export default class IssueAugmentationPlugin extends Plugin {

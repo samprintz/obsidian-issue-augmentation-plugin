@@ -1,11 +1,11 @@
 {
-	"id": "obsidian-issue-augmentation",
-	"name": "Issue Augmentation",
+	"id": "obsidian-github-issue-augmentation",
+	"name": "GitHub Issue Augmentation",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Augments GitHub issue IDs",
 	"author": "samprintz",
 	"authorUrl": "https://github.com/samprintz",
 	"fundingUrl": "",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }
