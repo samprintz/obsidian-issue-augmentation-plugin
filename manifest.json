@@ -1,5 +1,5 @@
 {
-	"id": "obsidian-github-issue-augmentation",
+	"id": "github-issue-augmentation",
 	"name": "GitHub Issue Augmentation",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
