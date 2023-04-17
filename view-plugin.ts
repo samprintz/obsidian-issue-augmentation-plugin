@@ -53,7 +53,7 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
     const allWidgets = [];
 
     // TODO better way to access settings/plugin properties
-    const plugin = window.app.plugins.plugins['obsidian-issue-augmentation'];
+    const plugin = window.app.plugins.plugins['github-issue-augmentation'];
 
     for (const lineNumber of Object.keys(decorationsByLine)) {
         const widgets = decorationsByLine[lineNumber];
