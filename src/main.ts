@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
-import { IssueAugmentationViewPlugin } from 'view-plugin';
-import { IssueAugmentationPluginSettings, DEFAULT_SETTINGS, IssueAugmentationPluginSettingTab } from 'settings';
+import { IssueAugmentationViewPlugin } from 'src/view-plugin';
+import { IssueAugmentationPluginSettings, DEFAULT_SETTINGS, IssueAugmentationPluginSettingTab } from 'src/settings';
 import { Extension } from '@codemirror/state';
 import fs from 'fs'; // TODO reason for isDesktopOnly
 import { Octokit } from '@octokit/rest';
