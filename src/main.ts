@@ -1,8 +1,7 @@
-import { Plugin } from 'obsidian';
+import { Plugin, TFile } from 'obsidian';
 import { IssueAugmentationViewPlugin } from 'src/view-plugin';
 import { IssueAugmentationPluginSettings, DEFAULT_SETTINGS, IssueAugmentationPluginSettingTab } from 'src/settings';
 import { Extension } from '@codemirror/state';
-import fs from 'fs'; // TODO reason for isDesktopOnly
 import { Octokit } from '@octokit/rest';
 
 export default class IssueAugmentationPlugin extends Plugin {
@@ -45,8 +44,7 @@ export default class IssueAugmentationPlugin extends Plugin {
 			this.settings.repoName);
 		map = Object.assign(map, githubIssueMap);
 
-		const path = app.vault.adapter.getBasePath() + "/" + this.settings.issueFilePath;
-		const fileIssueMap = await this.getFileIssueTitles(path);
+		const fileIssueMap = await this.getFileIssueTitles(this.settings.issueFilePath);
 		map = Object.assign(map, fileIssueMap);
 
 		return map;
@@ -93,16 +91,20 @@ export default class IssueAugmentationPlugin extends Plugin {
 
 		console.log(`Read issue titles from ${path}`);
 
-		const data = await fs.promises.readFile(path, 'utf-8');
+		const file = this.app.vault.getAbstractFileByPath(path);
 
-		const rows = data.trim().split('\n');
-		rows.forEach((row) => {
-			const [id, text] = row.split(',');
-			// TODO validation of ID and text
-			map[id] = text;
-		});
+		if (file instanceof TFile) {
+			const content = await this.app.vault.cachedRead(file);
+			const rows = content.split(`\n`);
 
-		console.log('CSV file processed');
+			rows.forEach((row) => {
+				const [id, text] = row.split(',');
+				// TODO validation of ID and text
+				map[id] = text;
+			});
+
+			console.log('CSV file processed');
+		}
 
 		return map;
 	}
