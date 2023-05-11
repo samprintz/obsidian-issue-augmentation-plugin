@@ -60,8 +60,14 @@ export default class IssueAugmentationPlugin extends Plugin {
 			const issuesPerPage = 100;
 			const nrPages = nrOfIssues / issuesPerPage;
 
+			const pageNrList = [];
+
 			for (let pageNr = 1; pageNr < nrPages; pageNr++) {
-				const response = await this.octokit.issues.listForRepo({
+				pageNrList.push(pageNr);
+			}
+
+			const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
+				return this.octokit.issues.listForRepo({
 					owner: owner,
 					repo: repo,
 					filter: "all",
@@ -69,13 +75,18 @@ export default class IssueAugmentationPlugin extends Plugin {
 					per_page: issuesPerPage,
 					page: pageNr,
 				});
+			}));
 
-				const issues = response.data;
+			responses.forEach(response => {
+				if (response.status === "fulfilled") {
+					const issues = response.value?.data ?? [];
 
-				issues.forEach((issue) => {
-					map[issue.number] = issue.title;
-				});
-			}
+					issues.forEach((issue) => {
+						map[issue.number] = issue.title;
+					});
+				}
+			});
+
 
 			console.log("Issues fetched from GitHub");
 		} else {
