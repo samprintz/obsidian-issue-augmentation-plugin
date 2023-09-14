@@ -33,16 +33,17 @@ function getDecosOnLine(view: EditorView, lineNumber: number) {
     const line = view.state.doc.line(lineNumber);
     const docText = view.state.sliceDoc(line.from, line.to);
 
-    const regex = /#(\d{1,5})/g;
+    const regex = /([a-zA-Z0-9\\.\-_]*)#(\d{1,5})/g;
 
     const matches = [...docText.matchAll(regex)];
 
     for (const match of matches) {
-        const issueId = match[1];
+        const repository = match[1];
+        const issueId = match[2];
         const start = match.index;
         const end = match.index + match[0].length;
 
-        widgets.push({id: issueId, start: start, end: end})
+        widgets.push({id: issueId, repository, start, end})
     }
 
 	return widgets;
@@ -55,13 +56,22 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
     // TODO better way to access settings/plugin properties
     const plugin = window.app.plugins.plugins['github-issue-augmentation'];
 
+    const urlPrefix = plugin.settings.urlPrefix.endsWith("/") ? plugin.settings.urlPrefix : plugin.settings.urlPrefix + "/";
+    const defaultRepository = plugin.settings.repoNames[0];
+
     for (const lineNumber of Object.keys(decorationsByLine)) {
         const widgets = decorationsByLine[lineNumber];
         const lineStart = view.state.doc.line(lineNumber).from;
 
-        const offsetWidgets = widgets.map((issue => {
-            issue.url = plugin.settings.urlPrefix + issue.id;
-            issue.title = plugin.issueIdToTitleMap[issue.id];
+        const offsetWidgets = widgets
+        .map((issue) => {
+            issue.repository = issue.repository?.length ? issue.repository : defaultRepository;
+            return issue;
+        })
+        .filter(issue => plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) // invalid repository name // TODO highlight as invalid
+        .map((issue => {
+            issue.url = `${urlPrefix}${issue.repository}/${issue.id}`;
+            issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
 
             return Decoration
                 .widget({

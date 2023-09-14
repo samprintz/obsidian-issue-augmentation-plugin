@@ -41,7 +41,7 @@ export default class IssueAugmentationPlugin extends Plugin {
 		let map: {[id: string]: string} = {};
 
 		const githubIssueMap = await this.getGitHubIssueTitles(this.settings.repoOwner,
-			this.settings.repoName);
+			this.settings.repoNames);
 		map = Object.assign(map, githubIssueMap);
 
 		const fileIssueMap = await this.getFileIssueTitles(this.settings.issueFilePath);
@@ -50,43 +50,46 @@ export default class IssueAugmentationPlugin extends Plugin {
 		return map;
 	}
 
-	async getGitHubIssueTitles(owner: string, repo: string) {
+	async getGitHubIssueTitles(owner: string, repos: string[]) {
 		const map = {};
 
-		console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
+		if (owner?.length && repos?.length) {
+			for (const repo of repos.filter(repo => repo?.length)) {
+				console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
 
-		if (owner?.length && repo?.length) {
-			const nrOfIssues = 3000; // TODO assuming 3.000 issues to fetch
-			const issuesPerPage = 100;
-			const nrPages = nrOfIssues / issuesPerPage;
+				map[repo] = {};
 
-			const pageNrList = [];
+				const nrOfIssues = 3000; // TODO assuming 3.000 issues to fetch
+				const issuesPerPage = 100;
+				const nrPages = nrOfIssues / issuesPerPage;
 
-			for (let pageNr = 1; pageNr < nrPages; pageNr++) {
-				pageNrList.push(pageNr);
-			}
+				const pageNrList = [];
 
-			const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
-				return this.octokit.issues.listForRepo({
-					owner: owner,
-					repo: repo,
-					filter: "all",
-					state: "all",
-					per_page: issuesPerPage,
-					page: pageNr,
-				});
-			}));
-
-			responses.forEach(response => {
-				if (response.status === "fulfilled") {
-					const issues = response.value?.data ?? [];
-
-					issues.forEach((issue) => {
-						map[issue.number] = issue.title;
-					});
+				for (let pageNr = 1; pageNr < nrPages; pageNr++) {
+					pageNrList.push(pageNr);
 				}
-			});
 
+				const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
+					return this.octokit.issues.listForRepo({
+						owner: owner,
+						repo: repo,
+						filter: "all",
+						state: "all",
+						per_page: issuesPerPage,
+						page: pageNr,
+					});
+				}));
+
+				responses.forEach(response => {
+					if (response.status === "fulfilled") {
+						const issues = response.value?.data ?? [];
+
+						issues.forEach((issue) => {
+							map[repo][issue.number] = issue.title;
+						});
+					}
+				});
+			}
 
 			console.log("Issues fetched from GitHub");
 		} else {

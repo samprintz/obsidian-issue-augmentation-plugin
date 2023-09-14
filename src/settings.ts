@@ -63,18 +63,18 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.repoOwner = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap();
+					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
 				})
 			);
 
 		new Setting(containerEl)
-			.setName('GitHub repository name')
+			.setName('GitHub repositories (comma-separated; first is default)')
 			.addText(text => text
-				.setValue(this.plugin.settings.repoName)
+				.setValue(this.plugin.settings.repoNames?.join(","))
 				.onChange(async (value) => {
-					this.plugin.settings.repoName = value;
+					this.plugin.settings.repoNames = value?.split(","); // TODO validate
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap();
+					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
 				})
 			);
 
@@ -86,7 +86,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.githubToken = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap();
+					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
 				})
 			);
 
