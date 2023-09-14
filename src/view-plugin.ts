@@ -33,7 +33,7 @@ function getDecosOnLine(view: EditorView, lineNumber: number) {
     const line = view.state.doc.line(lineNumber);
     const docText = view.state.sliceDoc(line.from, line.to);
 
-    const regex = /#(\d{3,4})/g;
+    const regex = /#(\d{1,5})/g;
 
     const matches = [...docText.matchAll(regex)];
 
