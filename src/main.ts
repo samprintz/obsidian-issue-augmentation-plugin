@@ -53,13 +53,15 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getGitHubIssueTitles(owner: string, repos: string[]) {
 		const map = {};
 
+		const repositoryIssueCounts = await this.getRepositoryIssueCounts(owner, repos);
+
 		if (owner?.length && repos?.length) {
 			for (const repo of repos.filter(repo => repo?.length)) {
 				console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
 
 				map[repo] = {};
 
-				const nrOfIssues = 3000; // TODO assuming 3.000 issues to fetch
+				const nrOfIssues = repositoryIssueCounts[repo] ?? 0;
 				const issuesPerPage = 100;
 				const nrPages = nrOfIssues / issuesPerPage;
 
@@ -71,8 +73,8 @@ export default class IssueAugmentationPlugin extends Plugin {
 
 				const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
 					return this.octokit.issues.listForRepo({
-						owner: owner,
-						repo: repo,
+						owner,
+						repo,
 						filter: "all",
 						state: "all",
 						per_page: issuesPerPage,
@@ -98,6 +100,28 @@ export default class IssueAugmentationPlugin extends Plugin {
 		}
 
 		return map;
+	}
+
+	async getRepositoryIssueCounts(owner: string, repositories: string[]): Promise<Record<string, number>> {
+		const responsesWithRepo = await Promise.allSettled(repositories.map((repo) => {
+			return this.octokit.search.issuesAndPullRequests({
+				q: `owner:${owner}+repo:${repo}`,
+				owner,
+				repo,
+				per_page: 1,
+				page: 1,
+			})
+			.then((response) => ({ repo, response }));
+		}));
+
+		return responsesWithRepo.reduce((repositoryIssueCounts, responseWithRepo) => {
+			if (responseWithRepo.status === "fulfilled") {
+				const { repo, response } = responseWithRepo.value;
+				repositoryIssueCounts[repo] = response.data?.total_count;
+			}
+
+			return repositoryIssueCounts;
+		}, {})
 	}
 
 	async getFileIssueTitles(path: string) {
