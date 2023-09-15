@@ -1,5 +1,7 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import IssueAugmentationPlugin from 'main';
+import { Subject } from 'rxjs';
+import { debounceTime, tap } from "rxjs/operators";
 
 
 export interface IssueAugmentationPluginSettings {
@@ -27,6 +29,16 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: IssueAugmentationPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+
+		this.reloadIssueIdToTitleMapSubject = new Subject();
+		this.reloadIssueIdToTitleMapSubject
+			.pipe(
+				debounceTime(2000),
+				tap((v) => {
+					this.plugin.reloadIssueIdToTitleMap();
+				})
+			)
+			.subscribe();
 	}
 
 	display(): void {
@@ -52,7 +64,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.urlPrefix = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadEditorExtensions();
+					this.reloadIssueIdToTitleMapSubject.next(value);
 				})
 			);
 
@@ -63,7 +75,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.repoOwner = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
+					this.reloadIssueIdToTitleMapSubject.next(value);
 				})
 			);
 
@@ -74,7 +86,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.repoNames = value?.split(","); // TODO validate
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
+					this.reloadIssueIdToTitleMapSubject.next(value);
 				})
 			);
 
@@ -86,7 +98,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.githubToken = value;
 					await this.plugin.saveSettings();
-					this.plugin.reloadIssueIdToTitleMap(); // TODO debounce time (rxjs)?
+					this.reloadIssueIdToTitleMapSubject.next(value);
 				})
 			);
 
