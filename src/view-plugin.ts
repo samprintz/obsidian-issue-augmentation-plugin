@@ -56,7 +56,9 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
     // TODO better way to access settings/plugin properties
     const plugin = window.app.plugins.plugins['github-issue-augmentation'];
 
-    const urlPrefix = plugin.settings.urlPrefix.endsWith("/") ? plugin.settings.urlPrefix : plugin.settings.urlPrefix + "/";
+    const urlPrefix = plugin.settings.urlPrefix.endsWith("/")
+            ? plugin.settings.urlPrefix
+            : plugin.settings.urlPrefix + "/";
     const defaultRepository = plugin.settings.repoNames[0];
 
     for (const lineNumber of Object.keys(decorationsByLine)) {
@@ -64,21 +66,23 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
         const lineStart = view.state.doc.line(lineNumber).from;
 
         const offsetWidgets = widgets
-        .map((issue) => {
-            issue.repository = issue.repository?.length ? issue.repository : defaultRepository;
-            return issue;
-        })
-        .filter(issue => plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) // invalid repository name // TODO highlight as invalid
-        .map((issue => {
-            issue.url = `${urlPrefix}${issue.repository}/${issue.id}`;
-            issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
+            .map((issue) => {
+                issue.repository = issue.repository?.length
+                        ? issue.repository
+                        : defaultRepository;
+                return issue;
+            })
+            .filter(issue => plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) // invalid repository name // TODO highlight as invalid
+            .map((issue => {
+                issue.url = `${urlPrefix}${issue.repository}/${issue.id}`;
+                issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
 
-            return Decoration
-                .widget({
-                    widget: new IssueWidget(issue)
-                })
-                .range(issue.end + lineStart);
-        }));
+                return Decoration
+                    .widget({
+                        widget: new IssueWidget(issue)
+                    })
+                    .range(issue.end + lineStart);
+            }));
 
         allWidgets.push(...offsetWidgets);
     }
