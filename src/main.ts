@@ -45,7 +45,9 @@ export default class IssueAugmentationPlugin extends Plugin {
 		map = Object.assign(map, githubIssueMap);
 
 		const fileIssueMap = await this.getFileIssueTitles(this.settings.issueFilePath);
-		map = Object.assign(map, fileIssueMap);
+		for (const key in fileIssueMap) {
+			Object.assign(map[key], fileIssueMap[key]);
+		}
 
 		return map;
 	}
@@ -127,6 +129,9 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getFileIssueTitles(path: string) {
 		const map = {};
 
+		const defaultRepository = this.settings.repoNames[0];
+		const regex = /(([a-zA-Z0-9\\.\-_]*)#)?(\d{1,5}),(.*)/g;
+
 		console.log(`Read issue titles from ${path}`);
 
 		const file = this.app.vault.getAbstractFileByPath(path);
@@ -135,10 +140,25 @@ export default class IssueAugmentationPlugin extends Plugin {
 			const content = await this.app.vault.cachedRead(file);
 			const rows = content.split(`\n`);
 
+			let rowIndex = 0;
 			rows.forEach((row) => {
-				const [id, text] = row.split(',');
-				// TODO validation of ID and text
-				map[id] = text;
+				rowIndex++;
+				regex.lastIndex = 0; // reset lastIndex for each row
+				const match = regex.exec(row);
+
+				if (match) {
+					const repository = match[2] ?? defaultRepository;
+					const issueId = match[3];
+					const text = match[4];
+
+					if (!map.hasOwnProperty(repository)) {
+						map[repository] = {};
+					}
+
+					map[repository][issueId] = text;
+				} else {
+					console.warn(`Skipping invalid row ${rowIndex} in CSV: ${row}`);
+				}
 			});
 
 			console.log('CSV file processed');
