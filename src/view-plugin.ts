@@ -67,6 +67,7 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
 
         const offsetWidgets = widgets
             .map((issue) => {
+                // TODO ignore if no default repository is specified in settings
                 issue.repository = issue.repository?.length
                         ? issue.repository
                         : defaultRepository;

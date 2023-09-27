@@ -55,6 +55,10 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getGitHubIssueTitles(owner: string, repos: string[]) {
 		const map = {};
 
+		if (!repos || repos.length === 0) {
+			repos = await this.getRepositories(owner);
+		}
+
 		const repositoryIssueCounts = await this.getRepositoryIssueCounts(owner, repos);
 
 		if (owner?.length && repos?.length) {
@@ -104,6 +108,16 @@ export default class IssueAugmentationPlugin extends Plugin {
 		return map;
 	}
 
+	async getRepositories(owner: string): Promise<string[]> {
+		// public repositories only
+		//const response = await this.octokit.repos.listForUser({ username: owner });
+		//return response?.data?.map(r => r.name);
+
+		// public and private repositories
+		const response = await this.octokit.search.repos({ q: `user:${owner}` });
+		return response?.data?.items?.map(r => r.name);
+	}
+
 	async getRepositoryIssueCounts(owner: string, repositories: string[]): Promise<Record<string, number>> {
 		const responsesWithRepo = await Promise.allSettled(repositories.map((repo) => {
 			return this.octokit.search.issuesAndPullRequests({
@@ -147,6 +161,7 @@ export default class IssueAugmentationPlugin extends Plugin {
 				const match = regex.exec(row);
 
 				if (match) {
+					// TODO warn if no default repository is specified in settings
 					const repository = match[2] ?? defaultRepository;
 					const issueId = match[3];
 					const text = match[4];
