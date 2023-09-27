@@ -84,7 +84,24 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 			.addText(text => text
 				.setValue(this.plugin.settings.repoNames?.join(","))
 				.onChange(async (value) => {
-					this.plugin.settings.repoNames = value?.split(","); // TODO validate
+					const repoNames = []
+
+					if (value?.length > 0) {
+						const inputValues = value.split(",");
+						const regex = /^[a-zA-Z0-9\\.\-_]+$/;
+
+						for (const inputValue of inputValues) {
+							regex.lastIndex = 0;
+							const match = regex.exec(inputValue);
+							if (match) {
+								repoNames.push(inputValue);
+							} else {
+								console.warn(`Invalid repository name: ${inputValue}`);
+							}
+						}
+					}
+
+					this.plugin.settings.repoNames = repoNames;
 					await this.plugin.saveSettings();
 					this.reloadIssueIdToTitleMapSubject.next(value);
 				})
