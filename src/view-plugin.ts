@@ -59,7 +59,7 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
     const urlPrefix = plugin.settings.urlPrefix.endsWith("/")
             ? plugin.settings.urlPrefix
             : plugin.settings.urlPrefix + "/";
-    const defaultRepository = plugin.settings.repoNames[0];
+    const defaultRepository = plugin.settings.defaultRepoName;
 
     for (const lineNumber of Object.keys(decorationsByLine)) {
         const widgets = decorationsByLine[lineNumber];
