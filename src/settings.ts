@@ -8,7 +8,8 @@ export interface IssueAugmentationPluginSettings {
 	issueFilePath: string,
 	urlPrefix: string,
 	repoOwner: string,
-	repoName: string,
+	repoNames: string[],
+	defaultRepoName: string,
 	githubToken: string, // TODO store encrypted
 	titleColor: string,
 }
@@ -17,7 +18,8 @@ export const DEFAULT_SETTINGS: IssueAugmentationPluginSettings = {
 	issueFilePath: "",
 	urlPrefix: "https://github.com/",
 	repoOwner: "",
-	repoName: "",
+	repoNames: [],
+	defaultRepoName: "",
 	githubToken: "",
 	titleColor: "#888",
 }
@@ -80,7 +82,8 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('GitHub repositories (comma-separated; first is default)')
+			.setName('GitHub repositories (optional)')
+			.setDesc('List relevant repositories here to increase startup speed as only issue IDs of these repositories are fetched. Specify the repositories comma-separated.')
 			.addText(text => text
 				.setValue(this.plugin.settings.repoNames?.join(","))
 				.onChange(async (value) => {
@@ -88,7 +91,7 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 
 					if (value?.length > 0) {
 						const inputValues = value.split(",");
-						const regex = /^[a-zA-Z0-9\\.\-_]+$/;
+						const regex = /^[a-zA-Z0-9\\.\-_]+$/; // TODO store at single place
 
 						for (const inputValue of inputValues) {
 							regex.lastIndex = 0;
@@ -102,6 +105,28 @@ export class IssueAugmentationPluginSettingTab extends PluginSettingTab {
 					}
 
 					this.plugin.settings.repoNames = repoNames;
+					await this.plugin.saveSettings();
+					this.reloadIssueIdToTitleMapSubject.next(value);
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('Default GitHub repository (optional)')
+			.setDesc('Issue IDs without repository prefix (e.g. #123 instead my-repo#123) are associated with this repository')
+			.addText(text => text
+				.setValue(this.plugin.settings.defaultRepoName)
+				.onChange(async (value) => {
+					let defaultRepoName = "";
+					const regex = /^[a-zA-Z0-9\\.\-_]+$/; // TODO store at single place
+					const match = regex.exec(value);
+
+					if (match) {
+						defaultRepoName = value;
+					} else {
+						console.warn(`Invalid repository name: ${value}`);
+					}
+
+					this.plugin.settings.defaultRepoName = defaultRepoName;
 					await this.plugin.saveSettings();
 					this.reloadIssueIdToTitleMapSubject.next(value);
 				})

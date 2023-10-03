@@ -143,7 +143,7 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getFileIssueTitles(path: string) {
 		const map = {};
 
-		const defaultRepository = this.settings.repoNames[0];
+		const defaultRepository = this.settings.defaultRepoName;
 		const regex = /(([a-zA-Z0-9\\.\-_]*)#)?(\d{1,5}),(.*)/g;
 
 		console.log(`Read issue titles from ${path}`);
