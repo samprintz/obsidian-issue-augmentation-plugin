@@ -68,16 +68,20 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
 
         const offsetWidgets = widgets
             .map((issue) => {
-                // TODO ignore if no default repository is specified in settings
                 issue.repository = issue.repository?.length
                         ? issue.repository
                         : defaultRepository;
                 return issue;
             })
-            .filter(issue => plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) // invalid repository name // TODO highlight as invalid
             .map((issue => {
-                issue.url = `${urlPrefix}${repositoryOwner}/${issue.repository}/issues/${issue.id}`;
-                issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
+                if (plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) {
+                    issue.url = `${urlPrefix}${repositoryOwner}/${issue.repository}/issues/${issue.id}`;
+                    issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
+                } else { // invalid repository name
+                    issue.url = "";
+                    issue.title = "";
+                    issue.broken = true;
+                }
 
                 return Decoration
                     .widget({

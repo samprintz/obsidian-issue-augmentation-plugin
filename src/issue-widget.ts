@@ -6,12 +6,13 @@ export class IssueWidget extends WidgetType {
         this.issueId = issue.id;
         this.issueUrl = issue.url;
         this.issueTitle = issue.title;
+        this.broken = issue.broken;
     }
 
     toDOM(view: EditorView): HTMLElement {
         const span = document.createElement("span");
 
-        if (this.issueTitle) {
+        if (!this.broken) {
             const whitespace = document.createTextNode(" ");
 
             const a = document.createElement("a");
@@ -21,6 +22,10 @@ export class IssueWidget extends WidgetType {
 
             span.appendChild(whitespace);
             span.appendChild(a);
+        } else {
+            const warning = document.createTextNode("?")
+            span.classList.add("invalid-issue-id");
+            span.appendChild(warning)
         }
 
         return span;

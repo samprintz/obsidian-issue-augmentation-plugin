@@ -2,3 +2,9 @@
     color: var(--text-faint);
     text-decoration: none;
 }
+
+.invalid-issue-id {
+    color: var(--red);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
