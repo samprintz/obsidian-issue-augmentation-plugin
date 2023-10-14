@@ -46,6 +46,9 @@ export default class IssueAugmentationPlugin extends Plugin {
 
 		const fileIssueMap = await this.getFileIssueTitles(this.settings.issueFilePath);
 		for (const key in fileIssueMap) {
+			if (!map.hasOwnProperty(key)) {
+				map[key] = {};
+			}
 			Object.assign(map[key], fileIssueMap[key]);
 		}
 
