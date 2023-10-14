@@ -55,54 +55,58 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getGitHubIssueTitles(owner: string, repos: string[]) {
 		const map = {};
 
-		if (!repos || repos.length === 0) {
-			repos = await this.getRepositories(owner);
-		}
-
-		const repositoryIssueCounts = await this.getRepositoryIssueCounts(owner, repos);
-
-		if (owner?.length && repos?.length) {
-			for (const repo of repos.filter(repo => repo?.length)) {
-				console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
-
-				map[repo] = {};
-
-				const nrOfIssues = repositoryIssueCounts[repo] ?? 0;
-				const issuesPerPage = 100;
-				const nrPages = nrOfIssues / issuesPerPage;
-
-				const pageNrList = [];
-
-				for (let pageNr = 1; pageNr < nrPages; pageNr++) {
-					pageNrList.push(pageNr);
-				}
-
-				const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
-					return this.octokit.issues.listForRepo({
-						owner,
-						repo,
-						filter: "all",
-						state: "all",
-						per_page: issuesPerPage,
-						page: pageNr,
-					});
-				}));
-
-				responses.forEach(response => {
-					if (response.status === "fulfilled") {
-						const issues = response.value?.data ?? [];
-
-						issues.forEach((issue) => {
-							map[repo][issue.number] = issue.title;
-						});
-					}
-				});
+		if (owner?.length) {
+			if (!repos || repos.length === 0) {
+				console.log(`No GitHub repository specified in settings. Fetching all repositories.`);
+				repos = await this.getRepositories(owner);
 			}
 
-			console.log("Issues fetched from GitHub");
+			const repositoryIssueCounts = await this.getRepositoryIssueCounts(owner, repos);
+
+			if (repos?.length) {
+				for (const repo of repos.filter(repo => repo?.length)) {
+					console.log(`Fetch issue titles from GitHub repository ${owner}/${repo}`);
+
+					map[repo] = {};
+
+					const nrOfIssues = repositoryIssueCounts[repo] ?? 0;
+					const issuesPerPage = 100;
+					const nrPages = nrOfIssues / issuesPerPage;
+
+					const pageNrList = [];
+
+					for (let pageNr = 1; pageNr < nrPages; pageNr++) {
+						pageNrList.push(pageNr);
+					}
+
+					const responses = await Promise.allSettled(pageNrList.map((pageNr) => {
+						return this.octokit.issues.listForRepo({
+							owner,
+							repo,
+							filter: "all",
+							state: "all",
+							per_page: issuesPerPage,
+							page: pageNr,
+						});
+					}));
+
+					responses.forEach(response => {
+						if (response.status === "fulfilled") {
+							const issues = response.value?.data ?? [];
+
+							issues.forEach((issue) => {
+								map[repo][issue.number] = issue.title;
+							});
+						}
+					});
+				}
+
+				console.log("Issues fetched from GitHub");
+			} else {
+				console.warn(`No GitHub repository found`);
+			}
 		} else {
-			// TODO Obsidian notification
-			console.log(`Please specify owner and name of the GitHub repository`);
+			console.warn(`No GitHub repository owner specified in settings`);
 		}
 
 		return map;
@@ -143,45 +147,49 @@ export default class IssueAugmentationPlugin extends Plugin {
 	async getFileIssueTitles(path: string) {
 		const map = {};
 
-		const defaultRepository = this.settings.defaultRepoName;
-		const regex = /(([a-zA-Z0-9\\.\-_]*)#)?(\d{1,5}),(.*)/g;
+		if (path?.length) {
+			const defaultRepository = this.settings.defaultRepoName;
+			const regex = /(([a-zA-Z0-9\\.\-_]*)#)?(\d{1,5}),(.*)/g;
 
-		console.log(`Read issue titles from ${path}`);
+			console.log(`Read issue titles from ${path}`);
 
-		const file = this.app.vault.getAbstractFileByPath(path);
+			const file = this.app.vault.getAbstractFileByPath(path);
 
-		if (file instanceof TFile) {
-			const content = await this.app.vault.cachedRead(file);
-			const rows = content.split(`\n`);
+			if (file instanceof TFile) {
+				const content = await this.app.vault.cachedRead(file);
+				const rows = content.split(`\n`);
 
-			let rowIndex = 0;
-			rows.forEach((row) => {
-				rowIndex++;
-				regex.lastIndex = 0; // reset lastIndex for each row
-				const match = regex.exec(row);
+				let rowIndex = 0;
+				rows.forEach((row) => {
+					rowIndex++;
+					regex.lastIndex = 0; // reset lastIndex for each row
+					const match = regex.exec(row);
 
-				if (match) {
-					const hasValidRepository = match[2] || defaultRepository;
+					if (match) {
+						const hasValidRepository = match[2] || defaultRepository;
 
-					if (hasValidRepository) {
-						const repository = match[2] ?? defaultRepository;
-						const issueId = match[3];
-						const text = match[4];
+						if (hasValidRepository) {
+							const repository = match[2] ?? defaultRepository;
+							const issueId = match[3];
+							const text = match[4];
 
-						if (!map.hasOwnProperty(repository)) {
-							map[repository] = {};
+							if (!map.hasOwnProperty(repository)) {
+								map[repository] = {};
+							}
+
+							map[repository][issueId] = text;
+						} else {
+							console.warn(`Skipping row ${rowIndex} in CSV without repository: ${row}. Specify repository or enter a default repository in settings.`);
 						}
-
-						map[repository][issueId] = text;
 					} else {
-						console.warn(`Skipping row ${rowIndex} in CSV without repository: ${row}. Specify repository or enter a default repository in settings.`);
+						console.warn(`Skipping invalid row ${rowIndex} in CSV: ${row}`);
 					}
-				} else {
-					console.warn(`Skipping invalid row ${rowIndex} in CSV: ${row}`);
-				}
-			});
+				});
 
-			console.log('CSV file processed');
+				console.log('CSV file processed');
+			}
+		} else {
+			console.warn(`No GitHub issue title map file specified in settings`);
 		}
 
 		return map;
