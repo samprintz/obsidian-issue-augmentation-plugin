@@ -6,13 +6,13 @@ For instance, the markdown text
 
 ```
 - Finished #5432
-- Working on #5433
-- Next: #5434, #5435
+- Working on #5434
+- Next: #5435, backend#5433
 ```
 
 renders to:
 
-![20230413-185428-screenshot](https://user-images.githubusercontent.com/7581457/231971667-c5ed7591-21a5-4f3f-9ae4-b90cbbb1ac08.png)
+![20231014-190419-screenshot](https://github.com/samprintz/obsidian-issue-augmentation-plugin/assets/7581457/06bb2123-ef86-4175-834a-8fa29767f260)
 
 Each issue title is a link to the GitHub repository.
 
@@ -26,9 +26,16 @@ There are two sources for augmenting issue IDs with descriptive issue texts
 ### GitHub Integration
 
 For fetching information about issue IDs from GitHub,
-specify the repository owner and repository name in the plugin settings.
-Moreover, a GitHub personal access token (PAT) is required.
+specify the repository owner in the plugin settings.
+Additionally, a GitHub personal access token (PAT) is required.
 [Generate it](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) and add it in the plugin settings.
+
+It is possible to restrict the relevant repositories in the settings.
+If not specified, all repositories of the owner are considered.
+
+A default repository can be specified in the settings
+to interpret issue IDs without repository name,
+e.g. `#1234` instead of `myrepo#1234`.
 
 ### Custom Issue Title File
 
@@ -38,7 +45,7 @@ It should look like this:
 
 ```
 5432,My issue
-5433,Another issue
+backend#5433,Issue from another repository
 5434,Some bug
 5435,Cool feature
 ```
