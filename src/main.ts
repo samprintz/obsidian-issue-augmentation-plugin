@@ -161,16 +161,21 @@ export default class IssueAugmentationPlugin extends Plugin {
 				const match = regex.exec(row);
 
 				if (match) {
-					// TODO warn if no default repository is specified in settings
-					const repository = match[2] ?? defaultRepository;
-					const issueId = match[3];
-					const text = match[4];
+					const hasValidRepository = match[2] || defaultRepository;
 
-					if (!map.hasOwnProperty(repository)) {
-						map[repository] = {};
+					if (hasValidRepository) {
+						const repository = match[2] ?? defaultRepository;
+						const issueId = match[3];
+						const text = match[4];
+
+						if (!map.hasOwnProperty(repository)) {
+							map[repository] = {};
+						}
+
+						map[repository][issueId] = text;
+					} else {
+						console.warn(`Skipping row ${rowIndex} in CSV without repository: ${row}. Specify repository or enter a default repository in settings.`);
 					}
-
-					map[repository][issueId] = text;
 				} else {
 					console.warn(`Skipping invalid row ${rowIndex} in CSV: ${row}`);
 				}
