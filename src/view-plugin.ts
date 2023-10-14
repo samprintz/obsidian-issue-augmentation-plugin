@@ -77,17 +77,14 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
                 if (plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) {
                     issue.url = `${urlPrefix}${repositoryOwner}/${issue.repository}/issues/${issue.id}`;
                     issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
+                    return Decoration
+                        .widget({ widget: new IssueWidget(issue) })
+                        .range(issue.end + lineStart);
                 } else { // invalid repository name
-                    issue.url = "";
-                    issue.title = "";
-                    issue.broken = true;
+                    return Decoration
+                        .mark({ class: 'invalid-issue-id' })
+                        .range(issue.start + lineStart, issue.end + lineStart);
                 }
-
-                return Decoration
-                    .widget({
-                        widget: new IssueWidget(issue)
-                    })
-                    .range(issue.end + lineStart);
             }));
 
         allWidgets.push(...offsetWidgets);
