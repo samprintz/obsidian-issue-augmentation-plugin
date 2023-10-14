@@ -1,7 +1,7 @@
 {
 	"id": "github-issue-augmentation",
 	"name": "GitHub Issue Augmentation",
-	"version": "0.0.2",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Augments GitHub issue IDs",
 	"author": "samprintz",
