@@ -60,6 +60,7 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
             ? plugin.settings.urlPrefix
             : plugin.settings.urlPrefix + "/";
     const defaultRepository = plugin.settings.defaultRepoName;
+    const repositoryOwner = plugin.settings.repoOwner;
 
     for (const lineNumber of Object.keys(decorationsByLine)) {
         const widgets = decorationsByLine[lineNumber];
@@ -75,7 +76,7 @@ function decosByLineToDecorationSet(view: EditorView, decorationsByLine: {[lineN
             })
             .filter(issue => plugin.issueIdToTitleMap.hasOwnProperty(issue.repository)) // invalid repository name // TODO highlight as invalid
             .map((issue => {
-                issue.url = `${urlPrefix}${issue.repository}/${issue.id}`;
+                issue.url = `${urlPrefix}${repositoryOwner}/${issue.repository}/issues/${issue.id}`;
                 issue.title = plugin.issueIdToTitleMap[issue.repository][issue.id];
 
                 return Decoration
